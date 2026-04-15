@@ -1,12 +1,24 @@
 const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL;
 const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
 
-async function redis(command, ...args) {
-  const res = await fetch(`${REDIS_URL}/${command}/${args.map(a => encodeURIComponent(JSON.stringify(a))).join('/')}`, {
+async function redisGet(key) {
+  const res = await fetch(`${REDIS_URL}/get/${key}`, {
     headers: { Authorization: `Bearer ${REDIS_TOKEN}` }
   });
   const data = await res.json();
   return data.result;
+}
+
+async function redisSet(key, value) {
+  const res = await fetch(`${REDIS_URL}/set/${key}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${REDIS_TOKEN}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(value)
+  });
+  return await res.json();
 }
 
 export default async function handler(req, res) {
@@ -19,21 +31,30 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET' && action === 'load') {
-      const pending = await redis('get', 'pending') || '[]';
-      const history = await redis('get', 'history') || '[]';
-      const team = await redis('get', 'team') || '[]';
+      const [pendingRaw, historyRaw, teamRaw] = await Promise.all([
+        redisGet('pending'),
+        redisGet('history'),
+        redisGet('team')
+      ]);
+      const parse = (v) => {
+        if (!v) return [];
+        if (Array.isArray(v)) return v;
+        try { return JSON.parse(v); } catch { return []; }
+      };
       return res.status(200).json({
-        pending: JSON.parse(pending),
-        history: JSON.parse(history),
-        team: JSON.parse(team)
+        pending: parse(pendingRaw),
+        history: parse(historyRaw),
+        team: parse(teamRaw)
       });
     }
 
     if (req.method === 'POST' && action === 'save') {
       const { pending, history, team } = req.body;
-      if (pending !== undefined) await redis('set', 'pending', JSON.stringify(pending));
-      if (history !== undefined) await redis('set', 'history', JSON.stringify(history));
-      if (team !== undefined) await redis('set', 'team', JSON.stringify(team));
+      const ops = [];
+      if (pending !== undefined) ops.push(redisSet('pending', pending));
+      if (history !== undefined) ops.push(redisSet('history', history));
+      if (team !== undefined) ops.push(redisSet('team', team));
+      await Promise.all(ops);
       return res.status(200).json({ ok: true });
     }
 
