@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta property="og:title" content="邀请函快筛 · 爽爽侃车">
+<meta property="og:description" content="有新活动待处理，点击查看优先级和出差安排">
+<meta property="og:image" content="https://invite-filter.vercel.app/og-image.png">
+<meta property="og:url" content="https://invite-filter.vercel.app">
+<meta name="description" content="有新活动待处理，点击查看优先级和出差安排">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>邀请函快筛 · 爽爽侃车</title>
@@ -174,6 +179,11 @@ textarea{width:100%;min-height:130px;padding:10px;border:none;outline:none;resiz
     <div class="reply-box">
       <div class="reply-text" id="reply-text">—</div>
       <button class="copy-btn" onclick="copyReply()">复制话术</button>
+    </div>
+    <div class="section-label">群消息</div>
+    <div class="reply-box" style="background:#f0f8ff;border-color:#1AACB0;">
+      <div class="reply-text" id="group-msg-text" style="white-space:pre-line;color:#1a1a1a;"></div>
+      <button class="copy-btn" style="background:#1AACB0;color:#FFFEF9;border-color:#1a1a1a;" onclick="copyGroupMsg()">复制发群</button>
     </div>
     <div class="action-row">
       <button class="manga-btn" style="flex:1;margin:0;font-size:13px;padding:11px;" onclick="confirmAttend()">确认参加</button>
@@ -417,29 +427,61 @@ function renderResult(r) {
   if (team.length === 0) {
     avatarRow.innerHTML = '<div style="font-size:12px;color:#aaa;padding:4px 0;">请先在团队设置中添加成员</div>';
   } else {
+    // Count trips per person from history
+    const tripCount = {};
+    team.forEach(m => { tripCount[m.name] = 0; });
+    history.forEach(h => {
+      if (h.status === '爹去过了' && h.assignedTo) {
+        h.assignedTo.forEach(name => {
+          if (tripCount[name] !== undefined) tripCount[name]++;
+        });
+      }
+    });
+    // Find who has gone least (excluding squeeze members who are always selected)
+    const nonSqueeze = team.filter(m => !m.squeeze);
+    const minTrips = nonSqueeze.length > 0 ? Math.min(...nonSqueeze.map(m => tripCount[m.name] || 0)) : 0;
+    const recommended = nonSqueeze.filter(m => (tripCount[m.name] || 0) === minTrips).map(m => m.name);
+
     team.forEach(m => {
       const chip = document.createElement('div');
       chip.className = 'av-chip';
-      chip.onclick = () => chip.querySelector('.av-circle').classList.toggle('selected');
+      chip.onclick = () => {
+        const c = chip.querySelector('.av-circle');
+        c.classList.toggle('selected');
+        updateGroupMessage();
+      };
       const circle = document.createElement('div');
-      circle.className = 'av-circle' + (m.squeeze ? ' squeeze-on selected' : '');
+      const isRecommended = m.squeeze || recommended.includes(m.name);
+      circle.className = 'av-circle' + (isRecommended ? ' selected' : '') + (m.squeeze ? ' squeeze-on' : '');
       circle.textContent = m.name.substring(0, 2);
       const name = document.createElement('div');
       name.className = 'av-name';
       name.textContent = m.name;
       const tag = document.createElement('div');
       tag.className = 'av-tag';
-      tag.textContent = m.squeeze ? '压榨' : '';
+      const trips = tripCount[m.name] || 0;
+      tag.textContent = m.squeeze ? '压榨' : (isRecommended ? `轮到你了` : `已去${trips}次`);
+      tag.style.color = m.squeeze ? '#E8382A' : (isRecommended ? '#1AACB0' : '#aaa');
       chip.appendChild(circle); chip.appendChild(name); chip.appendChild(tag);
       avatarRow.appendChild(chip);
     });
   }
+
+  // Generate group message
+  updateGroupMessage();
   showScreen('screen-result');
 }
 
 async function confirmAttend() {
   if (!currentResult) return;
+  const selected = [];
+  document.querySelectorAll('#avatar-row .av-chip').forEach(chip => {
+    const circle = chip.querySelector('.av-circle');
+    const name = chip.querySelector('.av-name');
+    if (circle.classList.contains('selected')) selected.push(name.textContent);
+  });
   currentResult.status = '爹去过了';
+  currentResult.assignedTo = selected;
   history.unshift(currentResult);
   pending = pending.filter(p => p.id !== currentResult.id);
   await saveData();
@@ -466,6 +508,28 @@ function copyReply() {
   const t = document.getElementById('reply-text').textContent;
   if (navigator.clipboard) navigator.clipboard.writeText(t);
   alert('话术已复制！');
+}
+
+function updateGroupMessage() {
+  const r = currentResult;
+  if (!r) return;
+  const selected = [];
+  document.querySelectorAll('#avatar-row .av-chip').forEach(chip => {
+    const circle = chip.querySelector('.av-circle');
+    const name = chip.querySelector('.av-name');
+    if (circle.classList.contains('selected')) selected.push(name.textContent);
+  });
+  const who = selected.length > 0 ? selected.join('、') : '待定';
+  const priorityEmoji = r.priority === '高' ? '🔴' : r.priority === '中' ? '🟡' : '⚪';
+  const msg = `${priorityEmoji}【活动通知】${r.event_name}\n📅 ${r.date}\n📍 ${r.location}\n出席：${who}\n回复截止：${r.rsvp_deadline || '待确认'}\n\n大家有问题请回复～`;
+  const el = document.getElementById('group-msg-text');
+  if (el) el.textContent = msg;
+}
+
+function copyGroupMsg() {
+  const t = document.getElementById('group-msg-text').textContent;
+  if (navigator.clipboard) navigator.clipboard.writeText(t);
+  alert('群消息已复制，去发给大家吧！');
 }
 
 function getStatusClass(status) {
