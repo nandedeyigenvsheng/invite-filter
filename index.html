@@ -461,8 +461,8 @@ function renderResult(r) {
         updateNoticePreview();
       };
       const circle = document.createElement('div');
-      const isRecommended = m.squeeze || recommended.includes(m.name);
-      circle.className = 'av-circle' + (isRecommended ? ' selected' : '') + (m.squeeze ? ' squeeze-on' : '');
+      const isRecommended = recommended.includes(m.name);
+      circle.className = 'av-circle' + (m.squeeze ? ' squeeze-on selected' : '') + (!m.squeeze && isRecommended ? ' recommended' : '');
       circle.textContent = m.name.substring(0, 2);
       const name = document.createElement('div');
       name.className = 'av-name';
@@ -470,7 +470,7 @@ function renderResult(r) {
       const tag = document.createElement('div');
       tag.className = 'av-tag';
       const trips = tripCount[m.name] || 0;
-      tag.textContent = m.squeeze ? '压榨' : (isRecommended ? `轮到你了` : `已去${trips}次`);
+      tag.textContent = m.squeeze ? '压榨' : (isRecommended ? `推荐` : `已去${trips}次`);
       tag.style.color = m.squeeze ? '#E8382A' : (isRecommended ? '#1AACB0' : '#aaa');
       chip.appendChild(circle); chip.appendChild(name); chip.appendChild(tag);
       avatarRow.appendChild(chip);
