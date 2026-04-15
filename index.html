@@ -278,14 +278,30 @@ const SYSTEM_PROMPT = `你是专业的活动邀请函解析助手，服务于中
 - 低（随便）：答谢晚宴、线上小活动、品牌历史回顾、无实质内容`;
 
 let currentResult = null;
-let history = JSON.parse(localStorage.getItem('invite-history') || '[]');
-let team = JSON.parse(localStorage.getItem('invite-team') || '[]');
-let pending = JSON.parse(localStorage.getItem('invite-pending') || '[]');
+let history = [];
+let team = [];
+let pending = [];
 
-function saveData() {
-  localStorage.setItem('invite-history', JSON.stringify(history));
-  localStorage.setItem('invite-team', JSON.stringify(team));
-  localStorage.setItem('invite-pending', JSON.stringify(pending));
+async function saveData(changed) {
+  const body = {};
+  if (!changed || changed === 'pending') body.pending = pending;
+  if (!changed || changed === 'history') body.history = history;
+  if (!changed || changed === 'team') body.team = team;
+  await fetch('/api/data?action=save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+}
+
+async function loadData() {
+  try {
+    const res = await fetch('/api/data?action=load');
+    const data = await res.json();
+    history = data.history || [];
+    team = data.team || [];
+    pending = data.pending || [];
+  } catch(e) { console.error('加载失败', e); }
 }
 
 function showScreen(id, btn) {
@@ -507,8 +523,7 @@ function toggleSqueeze(i) {
   renderTeam();
 }
 
-renderPending();
-renderTeam();
+loadData().then(() => { renderPending(); renderTeam(); });
 </script>
 </body>
 </html>
