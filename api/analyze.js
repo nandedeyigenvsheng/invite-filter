@@ -63,9 +63,12 @@ export default async function handler(req, res) {
       if (phoneMatch) parsed.contact_phone = phoneMatch[0];
     }
     if (!parsed.contact_name && parsed.contact_phone) {
-      const escaped = parsed.contact_phone.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const nameMatch = text.match(new RegExp('[\\u4e00-\\u9fa5]{2,4}(?=\\s*' + escaped + ')'));
-      if (nameMatch) parsed.contact_name = nameMatch[0];
+      const idx = text.indexOf(parsed.contact_phone);
+      if (idx > 0) {
+        const before = text.substring(0, idx);
+        const nameMatch = before.match(/[一-龥]{2,3}\s*$/);
+        if (nameMatch) parsed.contact_name = nameMatch[0].trim();
+      }
     }
 
     res.status(200).json(parsed);
