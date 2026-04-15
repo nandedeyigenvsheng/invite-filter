@@ -392,6 +392,7 @@ async function startAnalyze() {
     saveData();
     renderResult(currentResult);
     document.getElementById('invite-input').value = '';
+    setTimeout(() => prefillContactInputs(), 100);
   } catch (e) {
     clearInterval(t);
     overlay.classList.remove('active');
@@ -477,9 +478,6 @@ function renderResult(r) {
   }
 
   showScreen('screen-result');
-  setTimeout(() => {
-    prefillContactInputs();
-  }, 50);
 }
 
 async function confirmAttend() {
