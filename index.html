@@ -392,7 +392,7 @@ async function startAnalyze() {
     saveData();
     renderResult(currentResult);
     document.getElementById('invite-input').value = '';
-    setTimeout(() => prefillContactInputs(), 100);
+
   } catch (e) {
     clearInterval(t);
     overlay.classList.remove('active');
@@ -478,7 +478,7 @@ function renderResult(r) {
   }
 
   showScreen('screen-result');
-  updateNoticePreview();
+  setTimeout(() => { prefillContactInputs(); updateNoticePreview(); }, 100);
 }
 
 async function confirmAttend() {
