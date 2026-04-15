@@ -48,9 +48,12 @@ export default async function handler(req, res) {
       })
     });
     const data = await response.json();
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
     const content = data.content?.find(b => b.type === 'text')?.text || '';
-    const clean = content.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
+    const clean = content.replace(/```json\n?|```\n?/g, '').trim();
+    const jsonMatch = clean.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No JSON found in response: ' + clean.substring(0, 200));
+    const parsed = JSON.parse(jsonMatch[0]);
     res.status(200).json(parsed);
   } catch (e) {
     res.status(500).json({ error: '解析失败：' + e.message });
