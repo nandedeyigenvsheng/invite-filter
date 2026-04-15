@@ -475,9 +475,10 @@ function renderResult(r) {
     });
   }
 
-  prefillContactInputs();
-  updateNoticePreview();
   showScreen('screen-result');
+  setTimeout(() => {
+    prefillContactInputs();
+  }, 50);
 }
 
 async function confirmAttend() {
