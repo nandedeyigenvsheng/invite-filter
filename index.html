@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>邀请函快筛 · 爽爽侃车</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
@@ -307,7 +310,7 @@ async function saveData(changed) {
 
 async function loadData() {
   try {
-    const res = await fetch('/api/data?action=load');
+    const res = await fetch('/api/data?action=load&t=' + Date.now());
     const data = await res.json();
     history = Array.isArray(data.history) ? data.history : [];
     team = Array.isArray(data.team) ? data.team : [];
