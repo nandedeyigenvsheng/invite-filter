@@ -187,6 +187,10 @@ textarea{width:100%;min-height:130px;padding:10px;border:none;outline:none;resiz
         <button id="notice-btn" onclick="copyNotice(event)" style="background:#F5C842;border:1.5px solid #1a1a1a;padding:2px 10px;font-family:'Noto Sans SC',sans-serif;font-size:10px;font-weight:700;cursor:pointer;color:#1a1a1a;">复制发群</button>
       </div>
       <div id="notice-preview" style="padding:10px;font-size:12px;color:#1a1a1a;line-height:1.9;white-space:pre-line;"></div>
+      <div style="padding:0 10px 10px;display:flex;gap:6px;">
+        <input id="contact-name-input" placeholder="联系人姓名" oninput="updateNoticePreview()" style="flex:1;padding:6px 8px;border:1.5px solid #1a1a1a;font-family:'Noto Sans SC',sans-serif;font-size:12px;background:#FFFEF9;outline:none;">
+        <input id="contact-phone-input" placeholder="电话/微信" oninput="updateNoticePreview()" style="flex:1;padding:6px 8px;border:1.5px solid #1a1a1a;font-family:'Noto Sans SC',sans-serif;font-size:12px;background:#FFFEF9;outline:none;">
+      </div>
     </div>
     <div class="action-row">
       <button class="manga-btn" style="flex:1;margin:0;font-size:13px;padding:11px;" onclick="confirmAttend()">确认参加</button>
@@ -472,6 +476,7 @@ function renderResult(r) {
     });
   }
 
+  prefillContactInputs();
   updateNoticePreview();
   showScreen('screen-result');
 }
@@ -501,7 +506,11 @@ function buildNoticeMsg() {
       selected.push(chip.querySelector('.av-name').textContent);
   });
   const who = selected.length > 0 ? selected.join('、') : '待定';
-  const contact = [r.contact_name, r.contact_phone].filter(Boolean).join(' ');
+  const nameInput = document.getElementById('contact-name-input');
+  const phoneInput = document.getElementById('contact-phone-input');
+  const cName = (nameInput && nameInput.value.trim()) || r.contact_name || '';
+  const cPhone = (phoneInput && phoneInput.value.trim()) || r.contact_phone || '';
+  const contact = [cName, cPhone].filter(Boolean).join(' ');
   const contactLine = contact ? '\n联系人：' + contact : '';
   const priorityEmoji = r.priority === '高' ? '🔴' : r.priority === '中' ? '🟡' : '⚪';
   return priorityEmoji + '【活动通知】' + r.event_name + '\n📅 ' + r.date + '\n📍 ' + r.location + '\n出席：' + who + contactLine + (r.rsvp_deadline && r.rsvp_deadline !== '无' ? '\n回复截止：' + r.rsvp_deadline : '');
@@ -510,6 +519,14 @@ function buildNoticeMsg() {
 function updateNoticePreview() {
   const el = document.getElementById('notice-preview');
   if (el) el.textContent = buildNoticeMsg();
+}
+
+function prefillContactInputs() {
+  if (!currentResult) return;
+  const nameInput = document.getElementById('contact-name-input');
+  const phoneInput = document.getElementById('contact-phone-input');
+  if (nameInput && currentResult.contact_name) nameInput.value = currentResult.contact_name;
+  if (phoneInput && currentResult.contact_phone) phoneInput.value = currentResult.contact_phone;
 }
 
 function copyNotice(e) {
