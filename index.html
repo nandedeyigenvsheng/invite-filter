@@ -11,8 +11,8 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:#f0ede8;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:20px 0;}
-.app{font-family:'Noto Sans SC',sans-serif;background:#FFFEF9;width:390px;min-height:100vh;border:3px solid #1a1a1a;position:relative;overflow:hidden;box-shadow:8px 8px 0 #1a1a1a;}
-.screen{display:none;padding-bottom:76px;}
+.app{font-family:'Noto Sans SC',sans-serif;background:#FFFEF9;width:390px;min-height:100vh;border:3px solid #1a1a1a;position:relative;overflow:visible;box-shadow:8px 8px 0 #1a1a1a;}
+.screen{display:none;padding-bottom:90px;min-height:100vh;}
 .screen.active{display:block;}
 .halftone-bg{background-image:radial-gradient(circle,#1a1a1a 1px,transparent 1px);background-size:8px 8px;opacity:0.06;position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:0;}
 .content{position:relative;z-index:1;}
@@ -65,7 +65,7 @@ textarea{width:100%;min-height:130px;padding:10px;border:none;outline:none;resiz
 .history-title{font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:5px;line-height:1.4;}
 .history-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .section-label{font-size:10px;font-weight:700;letter-spacing:0.15em;color:#888;text-transform:uppercase;padding:8px 12px 4px;border-top:1px solid #e0e0e0;margin-top:4px;}
-.nav-bar{position:absolute;bottom:0;left:0;right:0;background:#FFFEF9;border-top:3px solid #1a1a1a;display:flex;}
+.nav-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:390px;background:#FFFEF9;border-top:3px solid #1a1a1a;border-left:3px solid #1a1a1a;border-right:3px solid #1a1a1a;display:flex;z-index:100;}
 .nav-item{flex:1;padding:10px 4px 8px;text-align:center;cursor:pointer;border:none;background:none;font-family:'Noto Sans SC',sans-serif;font-size:10px;color:#888;font-weight:700;letter-spacing:0.05em;display:flex;flex-direction:column;align-items:center;gap:3px;border-right:1.5px solid #1a1a1a;}
 .nav-item:last-child{border-right:none;}
 .nav-item.active{background:#1a1a1a;color:#FFFEF9;}
