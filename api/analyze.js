@@ -52,7 +52,7 @@ export default async function handler(req, res) {
     const content = data.content?.find(b => b.type === 'text')?.text || '';
     const clean = content.replace(/```json\n?|```\n?/g, '').trim();
     const jsonMatch = clean.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('No JSON found in response: ' + clean.substring(0, 200));
+    if (!jsonMatch) throw new Error('No JSON found: ' + clean.substring(0, 200));
     const parsed = JSON.parse(jsonMatch[0]);
     res.status(200).json(parsed);
   } catch (e) {
