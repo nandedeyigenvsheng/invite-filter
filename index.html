@@ -212,6 +212,9 @@ textarea{width:100%;min-height:130px;padding:10px;border:none;outline:none;resiz
     <div style="padding:8px 12px;">
       <button class="manga-btn" style="background:#F5C842;color:#1a1a1a;box-shadow:4px 4px 0 #1a1a1a;" onclick="showAddMember()">+ 添加新成员</button>
     </div>
+    <div style="padding:0 12px 8px;">
+      <button class="manga-btn manga-btn-outline" style="font-size:12px;padding:9px;" onclick="clearAllData()">清空所有数据（重置）</button>
+    </div>
     <div class="manga-panel" id="add-member-panel" style="display:none;">
       <div class="manga-panel-title">新成员</div>
       <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">
@@ -306,10 +309,22 @@ async function loadData() {
   try {
     const res = await fetch('/api/data?action=load');
     const data = await res.json();
-    history = data.history || [];
-    team = data.team || [];
-    pending = data.pending || [];
+    history = Array.isArray(data.history) ? data.history : [];
+    team = Array.isArray(data.team) ? data.team : [];
+    pending = Array.isArray(data.pending) ? data.pending : [];
+    // Filter out any corrupted entries
+    history = history.filter(r => r && r.event_name);
+    team = team.filter(m => m && m.name);
+    pending = pending.filter(r => r && r.event_name);
   } catch(e) { console.error('加载失败', e); }
+}
+
+async function clearAllData() {
+  if (!confirm('确认清空所有数据？这会删除全部历史记录和团队成员！')) return;
+  history = []; team = []; pending = [];
+  await saveData();
+  renderHistory(); renderTeam(); renderPending();
+  alert('已清空！');
 }
 
 function showScreen(id, btn) {
@@ -421,22 +436,22 @@ function renderResult(r) {
   showScreen('screen-result');
 }
 
-function confirmAttend() {
+async function confirmAttend() {
   if (!currentResult) return;
   currentResult.status = '爹去过了';
   history.unshift(currentResult);
   pending = pending.filter(p => p.id !== currentResult.id);
-  saveData();
+  await saveData();
   showScreen('screen-history');
   document.querySelectorAll('.nav-item')[1].classList.add('active');
 }
 
-function confirmDecline() {
+async function confirmDecline() {
   if (!currentResult) return;
   currentResult.status = '成功摸鱼';
   history.unshift(currentResult);
   pending = pending.filter(p => p.id !== currentResult.id);
-  saveData();
+  await saveData();
   showScreen('screen-history');
   document.querySelectorAll('.nav-item')[1].classList.add('active');
 }
@@ -573,21 +588,21 @@ function showAddMember() {
   p.style.display = p.style.display === 'none' ? 'block' : 'none';
 }
 
-function addMember() {
+async function addMember() {
   const name = document.getElementById('new-member-name').value.trim();
   const role = document.getElementById('new-member-role').value.trim();
   if (!name) { alert('请填写名字'); return; }
   team.push({ name, role, squeeze: false });
-  saveData();
+  await saveData('team');
   document.getElementById('new-member-name').value = '';
   document.getElementById('new-member-role').value = '';
   document.getElementById('add-member-panel').style.display = 'none';
   renderTeam();
 }
 
-function toggleSqueeze(i) {
+async function toggleSqueeze(i) {
   team[i].squeeze = !team[i].squeeze;
-  saveData();
+  await saveData('team');
   renderTeam();
 }
 
