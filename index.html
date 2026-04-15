@@ -525,8 +525,22 @@ function prefillContactInputs() {
   if (!currentResult) return;
   const nameInput = document.getElementById('contact-name-input');
   const phoneInput = document.getElementById('contact-phone-input');
-  if (nameInput && currentResult.contact_name) nameInput.value = currentResult.contact_name;
-  if (phoneInput && currentResult.contact_phone) phoneInput.value = currentResult.contact_phone;
+  // Use AI result first
+  let cName = currentResult.contact_name || '';
+  let cPhone = currentResult.contact_phone || '';
+  // Fallback: extract phone from raw text using regex (1 + 10 digits)
+  if (!cPhone && currentResult.raw) {
+    const phoneMatch = currentResult.raw.match(/1[3-9]\d{9}/);
+    if (phoneMatch) cPhone = phoneMatch[0];
+  }
+  // Fallback: extract name - look for Chinese name right before the phone number
+  if (!cName && currentResult.raw && cPhone) {
+    const nameMatch = currentResult.raw.match(/[一-龥]{2,4}(?=\s*" + cPhone + ")/);
+    if (nameMatch) cName = nameMatch[0];
+  }
+  if (nameInput) nameInput.value = cName;
+  if (phoneInput) phoneInput.value = cPhone;
+  updateNoticePreview();
 }
 
 function copyNotice(e) {
