@@ -529,10 +529,11 @@ function copyGroupMsg() {
 
 async function confirmDecline() {
   if (!currentResult) return;
-  currentResult.status = '成功摸鱼';
-  history.unshift(currentResult);
-  pending = pending.filter(p => p.id !== currentResult.id);
-  await saveData();
+  // 重来：回到待处理列表，不记录到历史
+  if (!pending.find(p => p.id === currentResult.id)) {
+    pending.unshift(currentResult);
+    await saveData('pending');
+  }
   showScreen('screen-input');
   document.querySelectorAll('.nav-item')[0].classList.add('active');
   renderPending();
