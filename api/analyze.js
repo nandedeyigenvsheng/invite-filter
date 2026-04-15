@@ -24,7 +24,9 @@ export default async function handler(req, res) {
   "priority_reason": "一句话说明优先级原因",
   "action": "参加/婉拒/待定",
   "action_label": "去吧去吧/装病/还在挣扎",
-  "reply": "建议回复话术一句话"
+  "reply": "建议回复话术一句话",
+  "contact_name": "联系人姓名（联系媒介/对接人/PR后的人名，无则留空）",
+  "contact_phone": "联系人手机号码（11位数字，无则留空）"
 }
 
 优先级判断标准：
@@ -54,6 +56,18 @@ export default async function handler(req, res) {
     const jsonMatch = clean.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No JSON found: ' + clean.substring(0, 200));
     const parsed = JSON.parse(jsonMatch[0]);
+
+    // Server-side fallback: extract phone and name via regex if AI missed them
+    if (!parsed.contact_phone) {
+      const phoneMatch = text.match(/1[3-9][0-9]{9}/);
+      if (phoneMatch) parsed.contact_phone = phoneMatch[0];
+    }
+    if (!parsed.contact_name && parsed.contact_phone) {
+      const escaped = parsed.contact_phone.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const nameMatch = text.match(new RegExp('[\\u4e00-\\u9fa5]{2,4}(?=\\s*' + escaped + ')'));
+      if (nameMatch) parsed.contact_name = nameMatch[0];
+    }
+
     res.status(200).json(parsed);
   } catch (e) {
     res.status(500).json({ error: '解析失败：' + e.message });
