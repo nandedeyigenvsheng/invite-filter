@@ -387,6 +387,7 @@ async function startAnalyze() {
     clearInterval(t);
     overlay.classList.remove('active');
     currentResult = { ...parsed, raw: txt, id: Date.now() };
+    console.log('parsed result:', JSON.stringify(parsed));
     pending.push(currentResult);
     saveData();
     renderResult(currentResult);
