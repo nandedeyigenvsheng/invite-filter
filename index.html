@@ -214,9 +214,7 @@ textarea{width:100%;min-height:130px;padding:10px;border:none;outline:none;resiz
     <div id="team-list"></div>
     <div style="padding:8px 12px;">
       <button class="manga-btn" style="background:#F5C842;color:#1a1a1a;box-shadow:4px 4px 0 #1a1a1a;" onclick="showAddMember()">+ 添加新成员</button>
-    </div>
-    <div style="padding:0 12px 8px;">
-      <button class="manga-btn manga-btn-outline" style="font-size:12px;padding:9px;" onclick="clearAllData()">清空所有数据（重置）</button>
+
     </div>
     <div class="manga-panel" id="add-member-panel" style="display:none;">
       <div class="manga-panel-title">新成员</div>
@@ -555,13 +553,22 @@ function renderPending() {
   if (pending.length === 0) { list.innerHTML = ''; return; }
   list.innerHTML = pending.map((r, i) => `
     <div class="history-card" onclick="showPendingResult(${i})">
-      <div class="history-title">${r.event_name}</div>
-      <div class="history-meta">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div class="history-title" style="margin-bottom:0;flex:1;">${r.event_name}</div>
+        <button onclick="event.stopPropagation();deletePending(${i})" style="background:none;border:none;cursor:pointer;padding:0 0 0 8px;color:#ccc;font-size:16px;line-height:1;flex-shrink:0;">×</button>
+      </div>
+      <div class="history-meta" style="margin-top:5px;">
         <span class="stamp ${r.priority === '高' ? 'stamp-red' : r.priority === '中' ? 'stamp-yellow' : 'stamp-gray'}" style="font-size:9px;">${r.priority_label}</span>
         <span style="font-size:11px;color:#888;">${r.date}</span>
       </div>
     </div>
   `).join('');
+}
+
+async function deletePending(i) {
+  pending.splice(i, 1);
+  await saveData('pending');
+  renderPending();
 }
 
 function showPendingResult(i) {
@@ -582,6 +589,7 @@ function renderTeam() {
       <div style="flex:1;"><div style="font-size:14px;font-weight:700;color:#1a1a1a;">${m.name}</div><div style="font-size:11px;color:#888;">${m.role || '—'}</div></div>
       <span class="stamp stamp-red" style="font-size:9px;margin-right:6px;opacity:${m.squeeze ? 1 : 0.3};">压榨</span>
       <div class="toggle ${m.squeeze ? 'on' : ''}" onclick="toggleSqueeze(${i})"><div class="toggle-thumb"></div></div>
+      <button onclick="deleteMember(${i})" style="background:none;border:none;cursor:pointer;padding:0 0 0 8px;color:#ccc;font-size:18px;line-height:1;flex-shrink:0;">×</button>
     </div>
   `).join('');
 }
@@ -600,6 +608,13 @@ async function addMember() {
   document.getElementById('new-member-name').value = '';
   document.getElementById('new-member-role').value = '';
   document.getElementById('add-member-panel').style.display = 'none';
+  renderTeam();
+}
+
+async function deleteMember(i) {
+  if (!confirm('确认删除成员"' + team[i].name + '"？')) return;
+  team.splice(i, 1);
+  await saveData('team');
   renderTeam();
 }
 
