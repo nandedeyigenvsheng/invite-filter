@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>邀请函快筛 · 爽爽侃车</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#f0ede8;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:20px 0;}
+.app{font-family:'Noto Sans SC',sans-serif;background:#FFFEF9;width:390px;min-height:100vh;border:3px solid #1a1a1a;position:relative;overflow:hidden;box-shadow:8px 8px 0 #1a1a1a;}
+.screen{display:none;padding-bottom:76px;}
+.screen.active{display:block;}
+.halftone-bg{background-image:radial-gradient(circle,#1a1a1a 1px,transparent 1px);background-size:8px 8px;opacity:0.06;position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:0;}
+.content{position:relative;z-index:1;}
+.header{background:#E8382A;border-bottom:3px solid #1a1a1a;padding:10px 14px 8px;position:relative;}
+.header-title{font-size:22px;font-weight:900;color:#FFFEF9;letter-spacing:-0.5px;line-height:1;}
+.header-sub{font-size:10px;color:rgba(255,255,255,0.8);letter-spacing:0.15em;margin-top:2px;}
+.header-bird{position:absolute;right:10px;bottom:-2px;width:48px;height:48px;}
+.manga-panel{border:2.5px solid #1a1a1a;margin:10px 12px;background:#FFFEF9;position:relative;}
+.manga-panel-title{position:absolute;top:-11px;left:10px;background:#F5C842;border:2px solid #1a1a1a;font-size:10px;font-weight:700;padding:1px 8px;letter-spacing:0.05em;color:#1a1a1a;}
+.speech-bubble{background:#FFFEF9;border:2.5px solid #1a1a1a;border-radius:16px;padding:8px 12px;margin:10px 12px;position:relative;font-size:13px;color:#1a1a1a;line-height:1.5;}
+.speech-bubble::after{content:'';position:absolute;bottom:-12px;left:20px;border:6px solid transparent;border-top:10px solid #1a1a1a;}
+.speech-bubble::before{content:'';position:absolute;bottom:-9px;left:21px;border:5px solid transparent;border-top:9px solid #FFFEF9;z-index:1;}
+.bird-row{display:flex;align-items:flex-end;gap:8px;padding:4px 12px 0;}
+textarea{width:100%;min-height:130px;padding:10px;border:none;outline:none;resize:none;font-family:'Noto Sans SC',sans-serif;font-size:13px;color:#1a1a1a;background:transparent;line-height:1.7;}
+.manga-btn{display:block;width:calc(100% - 24px);margin:8px 12px;padding:13px;background:#E8382A;color:#FFFEF9;border:3px solid #1a1a1a;font-family:'Noto Sans SC',sans-serif;font-size:15px;font-weight:900;cursor:pointer;letter-spacing:0.1em;box-shadow:4px 4px 0 #1a1a1a;transition:all 0.1s;text-align:center;}
+.manga-btn:active{box-shadow:2px 2px 0 #1a1a1a;transform:translate(2px,2px);}
+.manga-btn-outline{background:#FFFEF9;color:#1a1a1a;}
+.priority-splash{padding:14px;border-bottom:3px solid #1a1a1a;position:relative;overflow:hidden;}
+.priority-splash .halftone-bg{opacity:0.12;}
+.priority-splash-high{background:#E8382A;}
+.priority-splash-mid{background:#F5C842;}
+.priority-splash-low{background:#e8e8e8;}
+.priority-kanji{font-size:42px;font-weight:900;line-height:1;color:#FFFEF9;text-shadow:3px 3px 0 #1a1a1a;}
+.priority-kanji-dark{color:#1a1a1a;text-shadow:3px 3px 0 rgba(0,0,0,0.15);}
+.priority-sub{font-size:11px;font-weight:700;letter-spacing:0.1em;margin-top:4px;}
+.priority-sub-light{color:rgba(255,255,255,0.9);}
+.priority-sub-dark{color:#555;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;border-top:2px solid #1a1a1a;}
+.info-cell{padding:9px 12px;border-right:1.5px solid #1a1a1a;border-bottom:1.5px solid #1a1a1a;}
+.info-cell:nth-child(2n){border-right:none;}
+.info-label{font-size:9px;font-weight:700;color:#888;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:3px;}
+.info-val{font-size:12px;color:#1a1a1a;font-weight:500;line-height:1.4;}
+.avatar-row{display:flex;gap:10px;padding:10px 12px;flex-wrap:wrap;}
+.av-chip{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;}
+.av-circle{width:44px;height:44px;border-radius:50%;border:2.5px solid #1a1a1a;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:#f5f5f0;color:#555;transition:all 0.15s;box-shadow:2px 2px 0 #1a1a1a;}
+.av-circle.selected{background:#1AACB0;color:#FFFEF9;}
+.av-circle.squeeze-on{background:#E8382A;color:#FFFEF9;}
+.av-name{font-size:10px;color:#555;font-weight:500;}
+.av-tag{font-size:9px;color:#E8382A;font-weight:700;}
+.stamp{display:inline-block;border:2.5px solid #1a1a1a;padding:3px 9px;font-size:10px;font-weight:700;letter-spacing:0.1em;box-shadow:2px 2px 0 #1a1a1a;}
+.stamp-red{background:#E8382A;color:#FFFEF9;}
+.stamp-yellow{background:#F5C842;color:#1a1a1a;}
+.stamp-teal{background:#1AACB0;color:#FFFEF9;}
+.stamp-gray{background:#e8e8e8;color:#555;}
+.reply-box{margin:0 12px 10px;border:2.5px solid #1a1a1a;background:#FFF9E6;padding:10px 12px;}
+.reply-text{font-size:12px;color:#1a1a1a;line-height:1.7;margin-bottom:8px;}
+.copy-btn{font-family:'Noto Sans SC',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.05em;background:#F5C842;border:2px solid #1a1a1a;padding:4px 12px;cursor:pointer;box-shadow:2px 2px 0 #1a1a1a;}
+.history-card{padding:10px 12px;border-bottom:2px solid #1a1a1a;cursor:pointer;background:#FFFEF9;transition:background 0.1s;}
+.history-card:hover{background:#FFF9E6;}
+.history-title{font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:5px;line-height:1.4;}
+.history-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.section-label{font-size:10px;font-weight:700;letter-spacing:0.15em;color:#888;text-transform:uppercase;padding:8px 12px 4px;border-top:1px solid #e0e0e0;margin-top:4px;}
+.nav-bar{position:absolute;bottom:0;left:0;right:0;background:#FFFEF9;border-top:3px solid #1a1a1a;display:flex;}
+.nav-item{flex:1;padding:10px 4px 8px;text-align:center;cursor:pointer;border:none;background:none;font-family:'Noto Sans SC',sans-serif;font-size:10px;color:#888;font-weight:700;letter-spacing:0.05em;display:flex;flex-direction:column;align-items:center;gap:3px;border-right:1.5px solid #1a1a1a;}
+.nav-item:last-child{border-right:none;}
+.nav-item.active{background:#1a1a1a;color:#FFFEF9;}
+.nav-item svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;}
+.team-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:2px solid #1a1a1a;}
+.toggle{width:36px;height:20px;border-radius:10px;border:2px solid #1a1a1a;background:#e8e8e8;cursor:pointer;position:relative;transition:all 0.2s;flex-shrink:0;}
+.toggle.on{background:#E8382A;}
+.toggle-thumb{width:14px;height:14px;border-radius:50%;background:#1a1a1a;position:absolute;top:1px;left:1px;transition:all 0.2s;}
+.toggle.on .toggle-thumb{left:17px;background:#FFFEF9;}
+.loading-screen{padding:32px 16px;text-align:center;}
+.loading-big{font-size:32px;font-weight:900;color:#1a1a1a;line-height:1.3;margin-bottom:12px;}
+.dot-row{display:flex;justify-content:center;gap:6px;margin:16px 0;}
+.dot{width:10px;height:10px;border-radius:50%;background:#E8382A;border:2px solid #1a1a1a;animation:bop 0.8s infinite;}
+.dot:nth-child(2){animation-delay:0.15s;background:#F5C842;}
+.dot:nth-child(3){animation-delay:0.3s;background:#1AACB0;}
+@keyframes bop{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.action-row{display:flex;gap:8px;padding:10px 12px 4px;}
+.counter{background:#E8382A;color:#FFFEF9;border:2px solid #1a1a1a;font-size:10px;font-weight:700;padding:1px 6px;display:inline-block;}
+.report-table{width:100%;border-collapse:collapse;font-size:11px;}
+.report-table th{padding:7px 8px;background:#1a1a1a;color:#FFFEF9;font-weight:700;text-align:left;}
+.report-table td{padding:7px 8px;border-bottom:1.5px solid #e0e0e0;color:#1a1a1a;}
+.report-table tr:nth-child(even) td{background:#FFF9E6;}
+.analyzing-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,254,249,0.9);z-index:100;align-items:center;justify-content:center;flex-direction:column;}
+.analyzing-overlay.active{display:flex;}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="halftone-bg"></div>
+
+  <!-- INPUT -->
+  <div class="screen active content" id="screen-input">
+    <div class="header">
+      <div class="header-title">邀请函快筛</div>
+      <div class="header-sub">爽爽侃车 · 活动情报系统</div>
+      <svg class="header-bird" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="44" fill="#E8382A" stroke="#1a1a1a" stroke-width="4"/>
+        <ellipse cx="38" cy="42" rx="13" ry="14" fill="white" stroke="#1a1a1a" stroke-width="2.5"/>
+        <circle cx="38" cy="44" r="6" fill="#1a1a1a"/><circle cx="40" cy="42" r="2" fill="white"/>
+        <ellipse cx="63" cy="42" rx="9" ry="10" fill="white" stroke="#1a1a1a" stroke-width="2.5"/>
+        <circle cx="63" cy="44" r="4.5" fill="#1a1a1a"/><circle cx="64.5" cy="42.5" r="1.5" fill="white"/>
+        <ellipse cx="54" cy="54" rx="10" ry="7" fill="#F5A623" stroke="#1a1a1a" stroke-width="2.5"/>
+        <path d="M46 58 Q54 63 62 58" fill="#F5A623" stroke="#1a1a1a" stroke-width="2"/>
+        <path d="M40 68 Q50 75 58 70" fill="#1AACB0" stroke="#1a1a1a" stroke-width="2.5"/>
+      </svg>
+    </div>
+    <div class="bird-row">
+      <svg width="36" height="36" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="44" fill="#E8382A" stroke="#1a1a1a" stroke-width="4"/>
+        <ellipse cx="38" cy="42" rx="13" ry="14" fill="white" stroke="#1a1a1a" stroke-width="2.5"/>
+        <circle cx="38" cy="44" r="6" fill="#1a1a1a"/>
+        <ellipse cx="63" cy="42" rx="9" ry="10" fill="white" stroke="#1a1a1a" stroke-width="2.5"/>
+        <circle cx="63" cy="44" r="4.5" fill="#1a1a1a"/>
+        <ellipse cx="54" cy="54" rx="10" ry="7" fill="#F5A623" stroke="#1a1a1a" stroke-width="2.5"/>
+        <path d="M40 68 Q50 75 58 70" fill="#1AACB0" stroke="#1a1a1a" stroke-width="2.5"/>
+      </svg>
+      <div class="speech-bubble" style="margin:8px 0 0;flex:1;">又来活动了？扔进来我帮你看！</div>
+    </div>
+    <div class="manga-panel" style="margin-top:14px;">
+      <div class="manga-panel-title">情报输入</div>
+      <textarea id="invite-input" placeholder="把微信里那坨文字直接粘贴进来…"></textarea>
+    </div>
+    <button class="manga-btn" onclick="startAnalyze()">开始解析！</button>
+    <div class="section-label">待处理 <span class="counter" id="pending-count">0</span></div>
+    <div id="pending-list"></div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen content" id="screen-result">
+    <div class="priority-splash priority-splash-high" id="priority-banner">
+      <div class="halftone-bg"></div>
+      <div style="position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.2em;color:rgba(255,255,255,0.8);margin-bottom:4px;">优先级</div>
+          <div class="priority-kanji" id="priority-title">逃不掉了</div>
+          <div class="priority-sub priority-sub-light" id="priority-reason">解析结果</div>
+        </div>
+        <svg width="56" height="56" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" fill="#E8382A" stroke="#1a1a1a" stroke-width="4"/>
+          <ellipse cx="35" cy="38" rx="13" ry="15" fill="white" stroke="#1a1a1a" stroke-width="2.5"/>
+          <ellipse cx="35" cy="40" rx="6" ry="7" fill="#1a1a1a"/>
+          <ellipse cx="63" cy="38" rx="9" ry="11" fill="white" stroke="#1a1a1a" stroke-width="2.5"/>
+          <ellipse cx="63" cy="40" rx="4" ry="5" fill="#1a1a1a"/>
+          <ellipse cx="52" cy="54" rx="10" ry="7" fill="#F5A623" stroke="#1a1a1a" stroke-width="2.5"/>
+          <path d="M44 58 Q52 63 60 58" fill="#F5A623" stroke="#1a1a1a" stroke-width="2"/>
+          <path d="M38 68 Q50 77 60 70" fill="#1AACB0" stroke="#1a1a1a" stroke-width="2.5"/>
+          <line x1="28" y1="22" x2="20" y2="10" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round"/>
+          <line x1="72" y1="22" x2="80" y2="10" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div style="padding:8px 12px 4px;border-bottom:2px solid #1a1a1a;">
+      <div style="font-size:10px;color:#888;font-weight:700;letter-spacing:0.1em;margin-bottom:2px;">活动</div>
+      <div style="font-size:16px;font-weight:900;color:#1a1a1a;line-height:1.3;" id="event-name">—</div>
+      <div style="font-size:11px;color:#888;margin-top:2px;" id="event-org">—</div>
+    </div>
+    <div class="info-grid">
+      <div class="info-cell"><div class="info-label">时间</div><div class="info-val" id="ei-time">—</div></div>
+      <div class="info-cell"><div class="info-label">地点</div><div class="info-val" id="ei-loc">—</div></div>
+      <div class="info-cell"><div class="info-label">形式</div><div class="info-val" id="ei-type">—</div></div>
+      <div class="info-cell"><div class="info-label">回复截止</div><div class="info-val" id="ei-rsvp">—</div></div>
+    </div>
+    <div class="section-label">派谁去</div>
+    <div class="avatar-row" id="avatar-row"></div>
+    <div class="section-label">建议回复 <span class="stamp stamp-teal" id="action-stamp" style="margin-left:6px;">去吧去吧</span></div>
+    <div class="reply-box">
+      <div class="reply-text" id="reply-text">—</div>
+      <button class="copy-btn" onclick="copyReply()">复制话术</button>
+    </div>
+    <div class="action-row">
+      <button class="manga-btn" style="flex:1;margin:0;font-size:13px;padding:11px;" onclick="confirmAttend()">确认参加</button>
+      <button class="manga-btn manga-btn-outline" style="flex:1;margin:0;font-size:13px;padding:11px;" onclick="confirmDecline()">装病</button>
+    </div>
+    <div style="padding:6px 12px 0;">
+      <button onclick="goBack()" style="background:none;border:none;cursor:pointer;font-family:'Noto Sans SC',sans-serif;font-size:11px;color:#888;font-weight:700;letter-spacing:0.1em;">← 返回</button>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="screen content" id="screen-history">
+    <div class="header">
+      <div class="header-title">历史记录</div>
+      <div class="header-sub" id="history-sub">共 0 条记录</div>
+    </div>
+    <div id="history-list"><div style="padding:32px;text-align:center;color:#aaa;font-size:13px;">还没有记录<br>去解析第一封邀请函吧！</div></div>
+  </div>
+
+  <!-- TEAM -->
+  <div class="screen content" id="screen-team">
+    <div class="header" style="background:#1a1a1a;">
+      <div class="header-title" style="color:#F5C842;">团队设置</div>
+      <div class="header-sub" style="color:rgba(255,255,255,0.6);" id="team-count-label">0 人</div>
+    </div>
+    <div class="bird-row" style="padding:10px 12px 4px;">
+      <svg width="32" height="32" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="44" fill="#E8382A" stroke="#1a1a1a" stroke-width="4"/>
+        <ellipse cx="38" cy="42" rx="13" ry="14" fill="white" stroke="#1a1a1a" stroke-width="2.5"/>
+        <circle cx="38" cy="44" r="6" fill="#1a1a1a"/>
+        <ellipse cx="63" cy="42" rx="9" ry="10" fill="white" stroke="#1a1a1a" stroke-width="2.5"/>
+        <circle cx="63" cy="44" r="4.5" fill="#1a1a1a"/>
+        <ellipse cx="54" cy="54" rx="10" ry="7" fill="#F5A623" stroke="#1a1a1a" stroke-width="2.5"/>
+        <path d="M40 68 Q50 75 58 70" fill="#1AACB0" stroke="#1a1a1a" stroke-width="2.5"/>
+      </svg>
+      <div class="speech-bubble" style="margin:6px 0 0;flex:1;font-size:12px;">压榨开关打开，我帮你记着！</div>
+    </div>
+    <div id="team-list"></div>
+    <div style="padding:8px 12px;">
+      <button class="manga-btn" style="background:#F5C842;color:#1a1a1a;box-shadow:4px 4px 0 #1a1a1a;" onclick="showAddMember()">+ 添加新成员</button>
+    </div>
+    <div class="manga-panel" id="add-member-panel" style="display:none;">
+      <div class="manga-panel-title">新成员</div>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+        <input id="new-member-name" placeholder="名字或外号" style="padding:8px;border:2px solid #1a1a1a;font-family:'Noto Sans SC',sans-serif;font-size:13px;background:#FFFEF9;outline:none;">
+        <input id="new-member-role" placeholder="负责方向（如：视频/图文/商务）" style="padding:8px;border:2px solid #1a1a1a;font-family:'Noto Sans SC',sans-serif;font-size:13px;background:#FFFEF9;outline:none;">
+        <button class="manga-btn" style="margin:0;width:100%;font-size:13px;padding:10px;" onclick="addMember()">确认添加</button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav-bar" id="main-nav">
+    <button class="nav-item active" onclick="showScreen('screen-input',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="13" y2="14"/></svg>解析
+    </button>
+    <button class="nav-item" onclick="showScreen('screen-history',this)">
+      <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10"/><polyline points="12 6 12 12 16 14"/></svg>历史
+    </button>
+    <button class="nav-item" onclick="showScreen('screen-team',this)">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>团队
+    </button>
+  </nav>
+</div>
+
+<div class="analyzing-overlay" id="analyzing-overlay">
+  <svg width="80" height="80" viewBox="0 0 100 100" style="margin-bottom:16px;animation:spin 2s linear infinite;">
+    <circle cx="50" cy="50" r="44" fill="#E8382A" stroke="#1a1a1a" stroke-width="4"/>
+    <ellipse cx="35" cy="40" rx="13" ry="15" fill="white" stroke="#1a1a1a" stroke-width="2.5"/>
+    <ellipse cx="35" cy="42" rx="6" ry="7" fill="#1a1a1a"/>
+    <ellipse cx="65" cy="40" rx="9" ry="11" fill="white" stroke="#1a1a1a" stroke-width="2.5"/>
+    <ellipse cx="65" cy="42" rx="4" ry="5" fill="#1a1a1a"/>
+    <ellipse cx="53" cy="55" rx="10" ry="7" fill="#F5A623" stroke="#1a1a1a" stroke-width="2.5"/>
+    <path d="M45 59 Q53 64 61 59" fill="#F5A623" stroke="#1a1a1a" stroke-width="2"/>
+    <path d="M38 68 Q50 77 60 70" fill="#1AACB0" stroke="#1a1a1a" stroke-width="2.5"/>
+  </svg>
+  <style>@keyframes spin{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(10deg)}}</style>
+  <div style="font-size:28px;font-weight:900;color:#1a1a1a;text-align:center;line-height:1.3;">正在读<br>这坨文字…</div>
+  <div class="dot-row"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+  <div style="font-size:12px;color:#888;letter-spacing:0.1em;" id="loading-step">识别车型中</div>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `你是专业的活动邀请函解析助手，服务于中国汽车媒体团队"爽爽侃车"。用户粘贴邀请函文字，你提取关键信息并严格以JSON格式返回，不要任何多余文字或markdown代码块。
+
+返回格式：
+{
+  "event_name": "活动名称",
+  "organizer": "主办方",
+  "date": "日期时间（不明确写待确认）",
+  "location": "地点（线上活动写线上）",
+  "format": "活动形式（发布会/试驾/论坛/晚宴/采访等）",
+  "rsvp_deadline": "回复截止（无则写无）",
+  "is_online": false,
+  "priority": "高/中/低",
+  "priority_label": "逃不掉了/可以考虑/随便",
+  "priority_reason": "一句话说明优先级原因",
+  "action": "参加/婉拒/待定",
+  "action_label": "去吧去吧/装病/还在挣扎",
+  "reply": "建议回复话术一句话"
+}
+
+优先级判断标准：
+- 高（逃不掉了）：首发/重磅技术发布、车企危机相关、华为/比亚迪/小米等热点品牌、有独家采访机会
+- 中（可以考虑）：常规新车上市、知名品牌试驾、有话题潜力但非首发
+- 低（随便）：答谢晚宴、线上小活动、品牌历史回顾、无实质内容`;
+
+let currentResult = null;
+let history = JSON.parse(localStorage.getItem('invite-history') || '[]');
+let team = JSON.parse(localStorage.getItem('invite-team') || '[]');
+let pending = JSON.parse(localStorage.getItem('invite-pending') || '[]');
+
+function saveData() {
+  localStorage.setItem('invite-history', JSON.stringify(history));
+  localStorage.setItem('invite-team', JSON.stringify(team));
+  localStorage.setItem('invite-pending', JSON.stringify(pending));
+}
+
+function showScreen(id, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const nav = document.getElementById('main-nav');
+  if (['screen-result'].includes(id)) {
+    nav.style.display = 'none';
+  } else {
+    nav.style.display = 'flex';
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    else if (id === 'screen-history') document.querySelectorAll('.nav-item')[1].classList.add('active');
+    else if (id === 'screen-team') document.querySelectorAll('.nav-item')[2].classList.add('active');
+    else document.querySelectorAll('.nav-item')[0].classList.add('active');
+  }
+  if (id === 'screen-history') renderHistory();
+  if (id === 'screen-team') renderTeam();
+  if (id === 'screen-input') renderPending();
+}
+
+async function startAnalyze() {
+  const txt = document.getElementById('invite-input').value.trim();
+  if (!txt) { alert('请先粘贴邀请函内容'); return; }
+
+  const overlay = document.getElementById('analyzing-overlay');
+  overlay.classList.add('active');
+  const steps = ['识别车型中', '对照情报库打分', '生成回复话术', '快好了快好了'];
+  let i = 0;
+  const stepEl = document.getElementById('loading-step');
+  const t = setInterval(() => { i++; if (steps[i]) stepEl.textContent = steps[i]; }, 900);
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: `请解析这份邀请函：\n\n${txt}` }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || '';
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    clearInterval(t);
+    overlay.classList.remove('active');
+    currentResult = { ...parsed, raw: txt, id: Date.now() };
+    pending.push(currentResult);
+    saveData();
+    renderResult(currentResult);
+    document.getElementById('invite-input').value = '';
+  } catch (e) {
+    clearInterval(t);
+    overlay.classList.remove('active');
+    alert('解析失败，请检查网络后重试');
+  }
+}
+
+function renderResult(r) {
+  const banner = document.getElementById('priority-banner');
+  const title = document.getElementById('priority-title');
+  const reason = document.getElementById('priority-reason');
+  const stamp = document.getElementById('action-stamp');
+  banner.className = 'priority-splash';
+  if (r.priority === '高') {
+    banner.classList.add('priority-splash-high');
+    title.className = 'priority-kanji';
+    reason.className = 'priority-sub priority-sub-light';
+  } else if (r.priority === '中') {
+    banner.classList.add('priority-splash-mid');
+    title.className = 'priority-kanji priority-kanji-dark';
+    reason.className = 'priority-sub priority-sub-dark';
+  } else {
+    banner.classList.add('priority-splash-low');
+    title.className = 'priority-kanji priority-kanji-dark';
+    reason.className = 'priority-sub priority-sub-dark';
+  }
+  title.textContent = r.priority_label || r.priority;
+  reason.textContent = r.priority_reason;
+  document.getElementById('event-name').textContent = r.event_name;
+  document.getElementById('event-org').textContent = r.organizer;
+  document.getElementById('ei-time').textContent = r.date;
+  document.getElementById('ei-loc').textContent = r.location;
+  document.getElementById('ei-type').textContent = r.format;
+  document.getElementById('ei-rsvp').textContent = r.rsvp_deadline;
+  document.getElementById('reply-text').textContent = r.reply;
+  const stampEl = document.getElementById('action-stamp');
+  stampEl.textContent = r.action_label || r.action;
+  stampEl.className = 'stamp ' + (r.action === '参加' ? 'stamp-teal' : r.action === '婉拒' ? 'stamp-red' : 'stamp-yellow');
+
+  const avatarRow = document.getElementById('avatar-row');
+  avatarRow.innerHTML = '';
+  if (team.length === 0) {
+    avatarRow.innerHTML = '<div style="font-size:12px;color:#aaa;padding:4px 0;">请先在团队设置中添加成员</div>';
+  } else {
+    team.forEach(m => {
+      const chip = document.createElement('div');
+      chip.className = 'av-chip';
+      chip.onclick = () => chip.querySelector('.av-circle').classList.toggle('selected');
+      const circle = document.createElement('div');
+      circle.className = 'av-circle' + (m.squeeze ? ' squeeze-on selected' : '');
+      circle.textContent = m.name.substring(0, 2);
+      const name = document.createElement('div');
+      name.className = 'av-name';
+      name.textContent = m.name;
+      const tag = document.createElement('div');
+      tag.className = 'av-tag';
+      tag.textContent = m.squeeze ? '压榨' : '';
+      chip.appendChild(circle); chip.appendChild(name); chip.appendChild(tag);
+      avatarRow.appendChild(chip);
+    });
+  }
+  showScreen('screen-result');
+}
+
+function confirmAttend() {
+  if (!currentResult) return;
+  currentResult.status = '爹去过了';
+  history.unshift(currentResult);
+  pending = pending.filter(p => p.id !== currentResult.id);
+  saveData();
+  showScreen('screen-history');
+  document.querySelectorAll('.nav-item')[1].classList.add('active');
+}
+
+function confirmDecline() {
+  if (!currentResult) return;
+  currentResult.status = '成功摸鱼';
+  history.unshift(currentResult);
+  pending = pending.filter(p => p.id !== currentResult.id);
+  saveData();
+  showScreen('screen-history');
+  document.querySelectorAll('.nav-item')[1].classList.add('active');
+}
+
+function goBack() {
+  showScreen('screen-input');
+  document.querySelectorAll('.nav-item')[0].classList.add('active');
+}
+
+function copyReply() {
+  const t = document.getElementById('reply-text').textContent;
+  if (navigator.clipboard) navigator.clipboard.writeText(t);
+  alert('话术已复制！');
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  document.getElementById('history-sub').textContent = '共 ' + history.length + ' 条记录';
+  if (history.length === 0) {
+    list.innerHTML = '<div style="padding:32px;text-align:center;color:#aaa;font-size:13px;">还没有记录<br>去解析第一封邀请函吧！</div>';
+    return;
+  }
+  list.innerHTML = history.map((r, i) => `
+    <div class="history-card">
+      <div class="history-title">${r.event_name}</div>
+      <div class="history-meta">
+        <span class="stamp ${r.status === '爹去过了' ? 'stamp-teal' : 'stamp-gray'}" style="font-size:9px;">${r.status}</span>
+        <span style="font-size:11px;color:#888;">${r.date} · ${r.location}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderPending() {
+  const list = document.getElementById('pending-list');
+  const count = document.getElementById('pending-count');
+  count.textContent = pending.length;
+  if (pending.length === 0) { list.innerHTML = ''; return; }
+  list.innerHTML = pending.map((r, i) => `
+    <div class="history-card" onclick="showPendingResult(${i})">
+      <div class="history-title">${r.event_name}</div>
+      <div class="history-meta">
+        <span class="stamp ${r.priority === '高' ? 'stamp-red' : r.priority === '中' ? 'stamp-yellow' : 'stamp-gray'}" style="font-size:9px;">${r.priority_label}</span>
+        <span style="font-size:11px;color:#888;">${r.date}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showPendingResult(i) {
+  currentResult = pending[i];
+  renderResult(currentResult);
+}
+
+function renderTeam() {
+  const list = document.getElementById('team-list');
+  document.getElementById('team-count-label').textContent = team.length + ' 人';
+  if (team.length === 0) {
+    list.innerHTML = '<div style="padding:16px 12px;font-size:12px;color:#aaa;">还没有成员，点下方按钮添加</div>';
+    return;
+  }
+  list.innerHTML = team.map((m, i) => `
+    <div class="team-row">
+      <div class="av-circle ${m.squeeze ? 'squeeze-on' : ''}" style="flex-shrink:0;">${m.name.substring(0,2)}</div>
+      <div style="flex:1;"><div style="font-size:14px;font-weight:700;color:#1a1a1a;">${m.name}</div><div style="font-size:11px;color:#888;">${m.role || '—'}</div></div>
+      <span class="stamp stamp-red" style="font-size:9px;margin-right:6px;opacity:${m.squeeze ? 1 : 0.3};">压榨</span>
+      <div class="toggle ${m.squeeze ? 'on' : ''}" onclick="toggleSqueeze(${i})"><div class="toggle-thumb"></div></div>
+    </div>
+  `).join('');
+}
+
+function showAddMember() {
+  const p = document.getElementById('add-member-panel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+
+function addMember() {
+  const name = document.getElementById('new-member-name').value.trim();
+  const role = document.getElementById('new-member-role').value.trim();
+  if (!name) { alert('请填写名字'); return; }
+  team.push({ name, role, squeeze: false });
+  saveData();
+  document.getElementById('new-member-name').value = '';
+  document.getElementById('new-member-role').value = '';
+  document.getElementById('add-member-panel').style.display = 'none';
+  renderTeam();
+}
+
+function toggleSqueeze(i) {
+  team[i].squeeze = !team[i].squeeze;
+  saveData();
+  renderTeam();
+}
+
+renderPending();
+renderTeam();
+</script>
+</body>
+</html>
